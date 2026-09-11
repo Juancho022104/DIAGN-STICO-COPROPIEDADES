@@ -78,7 +78,9 @@ Pasos manuales de configuración inicial (una vez):
    localmente (este archivo está en `.gitignore`, no se sube al repo).
 3. En GitHub → *Settings → Secrets and variables → Actions*, crear:
    - `CLASP_CREDENTIALS`: contenido de `~/.clasprc.json` tras `clasp login`.
-   - `APPS_SCRIPT_ID`: el mismo Script ID del paso 1.
+
+   (El Script ID ya está fijado directamente en `.github/workflows/deploy.yml`,
+   no requiere secreto porque no es información sensible por sí sola.)
 4. Desde el editor de Apps Script, ejecutar una vez `inicializarPlantilla()`
    (o `onOpen`) para autorizar los permisos de Sheets/Docs/Drive.
 5. Subir el logo corporativo de Ravell P.H. a Drive y pegar su File ID en la

@@ -26,9 +26,7 @@ jobs:
         run: echo "$CLASP_CREDENTIALS" > ~/.clasprc.json
 
       - name: Vincular proyecto de Apps Script
-        env:
-          SCRIPT_ID: ${{ secrets.APPS_SCRIPT_ID }}
-        run: echo "{\"scriptId\":\"$SCRIPT_ID\",\"rootDir\":\"src\"}" > .clasp.json
+        run: echo '{"scriptId":"1YsQZYzkgEmFnxmx2Xhc4EtCS7D-wPpx8Syw28GMaQxgWN09dEnr4Hylq","rootDir":"src"}' > .clasp.json
 
       - name: Subir código a Apps Script
         run: clasp push --force
