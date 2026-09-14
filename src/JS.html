@@ -11,6 +11,12 @@
     document.getElementById('tituloEdificio').textContent =
       'Diagnóstico de Empalme — ' + (data.cabecera.nombreCopropiedad || 'Nueva Copropiedad');
 
+    if (data.logoDataUrl) {
+      var logo = document.getElementById('logoRavell');
+      logo.src = data.logoDataUrl;
+      logo.classList.remove('hidden');
+    }
+
     document.getElementById('nombreCopropiedad').value = data.cabecera.nombreCopropiedad;
     document.getElementById('nit').value = data.cabecera.nit;
     document.getElementById('administradorSaliente').value = data.cabecera.administradorSaliente;

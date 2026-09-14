@@ -47,7 +47,11 @@ var RAVELL_CONFIG = {
   MARCA: {
     COLOR_PRIMARIO: '#1c3f60',
     COLOR_SECUNDARIO: '#c9a227',
-    NOMBRE_EMPRESA: 'Ravell P.H. Soluciones Integrales S.A.S.'
+    NOMBRE_EMPRESA: 'Ravell P.H. Soluciones Integrales S.A.S.',
+    // Logo oficial de Ravell P.H. en Drive. Se usa por defecto en el membrete del
+    // Informe Ejecutivo y en el formulario web; el campo de Cabecera solo hace falta
+    // diligenciarlo si alguna copropiedad necesita un logo distinto.
+    LOGO_DRIVE_FILE_ID_DEFAULT: '11kmPv8v72Bu3RadPz9CiIYlAjmtDNo2Z'
   },
 
   // Los 8 módulos oficiales de empalme Ravell P.H. con su batería de ítems de verificación.

@@ -45,9 +45,10 @@ function generarInformeEjecutivoCore_(analisis) {
  * Inserta el logo corporativo de Ravell P.H. desde Drive (si se configuró un File ID en Cabecera).
  */
 function insertarMembrete_(body, cabecera) {
-  if (cabecera.logoDriveFileId) {
+  var logoFileId = cabecera.logoDriveFileId || RAVELL_CONFIG.MARCA.LOGO_DRIVE_FILE_ID_DEFAULT;
+  if (logoFileId) {
     try {
-      var logoFile = DriveApp.getFileById(cabecera.logoDriveFileId);
+      var logoFile = DriveApp.getFileById(logoFileId);
       var img = body.appendImage(logoFile.getBlob());
       img.setWidth(140);
       img.setHeight(img.getHeight() * (140 / img.getWidth()));

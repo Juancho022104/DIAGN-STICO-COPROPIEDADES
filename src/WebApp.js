@@ -44,6 +44,8 @@ function cargarDatosIniciales() {
     return { nombre: m.nombre, items: itemsPorModulo[m.nombre] || [] };
   });
 
+  var logoFileId = cabecera.logoDriveFileId || RAVELL_CONFIG.MARCA.LOGO_DRIVE_FILE_ID_DEFAULT;
+
   return {
     cabecera: {
       nombreCopropiedad: cabecera.nombreCopropiedad || '',
@@ -55,8 +57,22 @@ function cargarDatosIniciales() {
       logoDriveFileId: cabecera.logoDriveFileId || ''
     },
     modulos: modulos,
-    estados: RAVELL_CONFIG.ESTADOS
+    estados: RAVELL_CONFIG.ESTADOS,
+    logoDataUrl: obtenerLogoDataUrl_(logoFileId)
   };
+}
+
+/**
+ * Devuelve el logo como data URL (base64) para mostrarlo en el encabezado del formulario web.
+ */
+function obtenerLogoDataUrl_(fileId) {
+  if (!fileId) return null;
+  try {
+    var blob = DriveApp.getFileById(fileId).getBlob();
+    return 'data:' + blob.getContentType() + ';base64,' + Utilities.base64Encode(blob.getBytes());
+  } catch (e) {
+    return null;
+  }
 }
 
 function formatearFechaInput_(fecha) {
