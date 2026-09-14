@@ -56,7 +56,7 @@ function construirHojaChecklist_() {
   sheet.clearFormats();
   sheet.setTabColor(RAVELL_CONFIG.MARCA.COLOR_SECUNDARIO);
 
-  var headers = ['Módulo', 'Ítem', 'Descripción de verificación', 'Estado', 'Observaciones', 'Responsable', 'Fecha de Revisión'];
+  var headers = ['Módulo', 'Ítem', 'Descripción de verificación', 'Estado', 'Observaciones', 'Responsable', 'Fecha de Revisión', 'Cantidad', 'Fotos (enlaces)'];
   sheet.getRange(2, 1, 1, headers.length).setValues([headers])
     .setFontWeight('bold').setBackground(RAVELL_CONFIG.MARCA.COLOR_PRIMARIO).setFontColor('#ffffff');
 
@@ -64,12 +64,12 @@ function construirHojaChecklist_() {
   var filasData = [];
   RAVELL_CONFIG.MODULOS.forEach(function (modulo) {
     modulo.items.forEach(function (itemTexto, idx) {
-      filasData.push([modulo.nombre, 'Ítem ' + (idx + 1), itemTexto, 'Pendiente', '', '', '']);
+      filasData.push([modulo.nombre, 'Ítem ' + (idx + 1), itemTexto, 'Pendiente', '', '', '', '', '']);
     });
   });
 
   if (filasData.length > 0) {
-    sheet.getRange(filaActual, 1, filasData.length, 7).setValues(filasData);
+    sheet.getRange(filaActual, 1, filasData.length, headers.length).setValues(filasData);
   }
 
   // Validación de datos para la columna Estado.
@@ -90,6 +90,8 @@ function construirHojaChecklist_() {
   sheet.setColumnWidth(5, 260);
   sheet.setColumnWidth(6, 140);
   sheet.setColumnWidth(7, 120);
+  sheet.setColumnWidth(8, 80);
+  sheet.setColumnWidth(9, 260);
 }
 
 function aplicarFormatoCondicionalEstado_(sheet, filaInicio, numFilas) {

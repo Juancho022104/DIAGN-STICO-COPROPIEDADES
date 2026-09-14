@@ -33,6 +33,7 @@ function generarInformeEjecutivoCore_(analisis) {
   insertarResumenCumplimiento_(body, analisis);
   insertarTablaPorModulo_(body, analisis);
   insertarHallazgosCriticos_(body, analisis);
+  insertarInventarioFotografico_(body);
   insertarCierre_(body, cabecera);
 
   doc.saveAndClose();
@@ -161,8 +162,57 @@ function insertarHallazgosCriticos_(body, analisis) {
   body.appendParagraph('');
 }
 
+/**
+ * Anexo fotográfico del módulo de Inventario: cantidad, estado y fotos de cada ítem
+ * (cuando se cargaron desde el formulario web). Sirve como línea base para comparar
+ * mejoras en diagnósticos futuros de la misma copropiedad.
+ */
+function insertarInventarioFotografico_(body) {
+  var itemsInventario = getFilasChecklist_().filter(function (fila) {
+    return fila.modulo === '8. Inventario' && (fila.cantidad || (fila.fotos && fila.fotos.length > 0));
+  });
+
+  var h = body.appendParagraph('4. Anexo Fotográfico de Inventario');
+  h.setHeading(DocumentApp.ParagraphHeading.HEADING1).setForegroundColor(RAVELL_CONFIG.MARCA.COLOR_PRIMARIO);
+
+  if (itemsInventario.length === 0) {
+    body.appendParagraph('No se registraron cantidades ni fotografías de inventario en este diagnóstico.')
+      .setItalic(true);
+    body.appendParagraph('');
+    return;
+  }
+
+  itemsInventario.forEach(function (item) {
+    var titulo = body.appendParagraph(item.descripcion);
+    titulo.setBold(true).setFontSize(12);
+
+    var meta = 'Estado: ' + (item.estado || 'Pendiente') +
+      (item.cantidad ? '  |  Cantidad: ' + item.cantidad : '');
+    body.appendParagraph(meta).setFontSize(10).setForegroundColor('#555555');
+
+    (item.fotos || []).forEach(function (url) {
+      insertarFotoDesdeUrlDrive_(body, url);
+    });
+
+    body.appendParagraph('');
+  });
+}
+
+function insertarFotoDesdeUrlDrive_(body, url) {
+  var match = url.match(/[-\w]{25,}/);
+  if (!match) return;
+  try {
+    var blob = DriveApp.getFileById(match[0]).getBlob();
+    var img = body.appendImage(blob);
+    img.setWidth(220);
+    img.setHeight(img.getHeight() * (220 / img.getWidth()));
+  } catch (e) {
+    body.appendParagraph('[No fue posible cargar la foto: ' + url + ']').setFontSize(8).setForegroundColor('#999999');
+  }
+}
+
 function insertarCierre_(body, cabecera) {
-  var h = body.appendParagraph('4. Recomendación al Consejo de Administración');
+  var h = body.appendParagraph('5. Recomendación al Consejo de Administración');
   h.setHeading(DocumentApp.ParagraphHeading.HEADING1).setForegroundColor(RAVELL_CONFIG.MARCA.COLOR_PRIMARIO);
   body.appendParagraph(
     'Este informe se entrega como resultado del proceso de empalme administrativo realizado por ' +

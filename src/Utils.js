@@ -42,11 +42,13 @@ function getFilasChecklist_() {
   if (lastRow < inicio) return [];
 
   var numFilas = lastRow - inicio + 1;
-  var values = sheet.getRange(inicio, 1, numFilas, 7).getValues();
+  var numCols = Math.max(sheet.getLastColumn(), RAVELL_CONFIG.CHECKLIST_COLUMNAS.FOTOS);
+  var values = sheet.getRange(inicio, 1, numFilas, numCols).getValues();
   var col = RAVELL_CONFIG.CHECKLIST_COLUMNAS;
 
   return values
     .map(function (fila, idx) {
+      var fotosTexto = fila[col.FOTOS - 1] || '';
       return {
         filaSheet: inicio + idx,
         modulo: fila[col.MODULO - 1],
@@ -55,7 +57,9 @@ function getFilasChecklist_() {
         estado: fila[col.ESTADO - 1],
         observaciones: fila[col.OBSERVACIONES - 1],
         responsable: fila[col.RESPONSABLE - 1],
-        fechaRevision: fila[col.FECHA_REVISION - 1]
+        fechaRevision: fila[col.FECHA_REVISION - 1],
+        cantidad: fila[col.CANTIDAD - 1] || '',
+        fotos: fotosTexto ? String(fotosTexto).split(',').map(function (u) { return u.trim(); }).filter(Boolean) : []
       };
     })
     .filter(function (fila) { return fila.item; });

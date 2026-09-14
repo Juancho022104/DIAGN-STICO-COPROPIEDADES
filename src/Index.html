@@ -14,8 +14,13 @@
   <div id="loading" class="loading">Cargando datos...</div>
 
   <main id="app" class="hidden">
+    <div id="barraProgreso" class="progreso">
+      <span id="progresoTexto">Progreso: 0 / 0 ítems</span>
+      <button id="btnContinuar" class="btn btn-secondary btn-sm">Continuar donde iba</button>
+    </div>
+
     <section class="card">
-      <h2>Datos Generales</h2>
+      <h2>Datos Generales <span id="autosaveCabecera" class="autosave-indicador"></span></h2>
       <div class="grid">
         <label>Nombre de la Copropiedad
           <input type="text" id="nombreCopropiedad">

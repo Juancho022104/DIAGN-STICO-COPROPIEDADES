@@ -1,5 +1,8 @@
 <script>
   var ESTADOS = [];
+  var timersAutoguardado = {};
+  var TIMER_CABECERA = 'cabecera';
+  var DEBOUNCE_MS = 800;
 
   document.addEventListener('DOMContentLoaded', function () {
     google.script.run.withSuccessHandler(iniciar).withFailureHandler(mostrarErrorCarga).cargarDatosIniciales();
@@ -26,10 +29,13 @@
     document.getElementById('logoDriveFileId').value = data.cabecera.logoDriveFileId;
 
     renderModulos(data.modulos);
+    actualizarProgreso();
 
     document.getElementById('loading').classList.add('hidden');
     document.getElementById('app').classList.remove('hidden');
   }
+
+  // ---------- Renderizado del checklist ----------
 
   function renderModulos(modulos) {
     var contenedor = document.getElementById('modulosContainer');
@@ -44,14 +50,14 @@
       seccion.appendChild(titulo);
 
       modulo.items.forEach(function (item) {
-        seccion.appendChild(crearFilaItem(item));
+        seccion.appendChild(crearFilaItem(item, modulo.conCantidad));
       });
 
       contenedor.appendChild(seccion);
     });
   }
 
-  function crearFilaItem(item) {
+  function crearFilaItem(item, conCantidad) {
     var fila = document.createElement('div');
     fila.className = 'item-row';
     fila.dataset.filaSheet = item.filaSheet;
@@ -62,7 +68,7 @@
     fila.appendChild(desc);
 
     var controles = document.createElement('div');
-    controles.className = 'item-controles';
+    controles.className = 'item-controles' + (conCantidad ? ' con-cantidad' : '');
 
     var select = document.createElement('select');
     select.className = 'input-estado';
@@ -73,13 +79,25 @@
       if (estado === item.estado) opt.selected = true;
       select.appendChild(opt);
     });
+    select.addEventListener('change', function () { onCambioItem(fila); });
     controles.appendChild(select);
+
+    if (conCantidad) {
+      var cantidad = document.createElement('input');
+      cantidad.type = 'text';
+      cantidad.placeholder = 'Cantidad';
+      cantidad.className = 'input-cantidad';
+      cantidad.value = item.cantidad || '';
+      cantidad.addEventListener('input', function () { onCambioItem(fila); });
+      controles.appendChild(cantidad);
+    }
 
     var obs = document.createElement('input');
     obs.type = 'text';
     obs.placeholder = 'Observaciones';
     obs.className = 'input-obs';
     obs.value = item.observaciones || '';
+    obs.addEventListener('input', function () { onCambioItem(fila); });
     controles.appendChild(obs);
 
     var resp = document.createElement('input');
@@ -87,14 +105,132 @@
     resp.placeholder = 'Responsable';
     resp.className = 'input-resp';
     resp.value = item.responsable || '';
+    resp.addEventListener('input', function () { onCambioItem(fila); });
     controles.appendChild(resp);
 
     fila.appendChild(controles);
+
+    var autosaveTag = document.createElement('span');
+    autosaveTag.className = 'item-autosave';
+    fila.appendChild(autosaveTag);
+
+    if (conCantidad) {
+      fila.appendChild(crearBloqueFotos(item));
+    }
+
     return fila;
   }
 
-  document.getElementById('btnGuardarCabecera').addEventListener('click', function () {
-    var datos = {
+  function crearBloqueFotos(item) {
+    var bloque = document.createElement('div');
+    bloque.className = 'item-fotos';
+
+    (item.fotos || []).forEach(function (url) {
+      bloque.appendChild(crearMiniaturaFoto(url));
+    });
+
+    var input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.multiple = true;
+    input.className = 'input-foto';
+    input.addEventListener('change', function (ev) {
+      Array.prototype.forEach.call(ev.target.files, function (file) {
+        subirFoto(item.filaSheet, file, bloque);
+      });
+      input.value = '';
+    });
+    bloque.appendChild(input);
+
+    return bloque;
+  }
+
+  function crearMiniaturaFoto(url) {
+    var a = document.createElement('a');
+    a.href = url;
+    a.target = '_blank';
+    var img = document.createElement('img');
+    img.src = url.indexOf('/view') !== -1 ? url.replace(/\/view.*/, '/preview') : url;
+    img.alt = 'Foto del ítem';
+    img.onerror = function () { img.replaceWith(document.createTextNode('📷 foto')); };
+    a.appendChild(img);
+    return a;
+  }
+
+  function subirFoto(filaSheet, file, bloque) {
+    var reader = new FileReader();
+    reader.onload = function () {
+      var base64 = reader.result.split(',')[1];
+      google.script.run
+        .withSuccessHandler(function (res) {
+          var placeholder = bloque.querySelector('.input-foto');
+          bloque.insertBefore(crearMiniaturaFoto(res.url), placeholder);
+        })
+        .withFailureHandler(function (err) { alert('Error subiendo la foto: ' + err.message); })
+        .subirFotoItemWeb(filaSheet, file.name, file.type, base64);
+    };
+    reader.readAsDataURL(file);
+  }
+
+  // ---------- Autoguardado ----------
+
+  function onCambioItem(fila) {
+    var filaSheet = fila.dataset.filaSheet;
+    if (timersAutoguardado[filaSheet]) clearTimeout(timersAutoguardado[filaSheet]);
+    timersAutoguardado[filaSheet] = setTimeout(function () {
+      guardarItem(fila);
+    }, DEBOUNCE_MS);
+  }
+
+  function guardarItem(fila) {
+    var cantidadInput = fila.querySelector('.input-cantidad');
+    var item = {
+      filaSheet: Number(fila.dataset.filaSheet),
+      estado: fila.querySelector('.input-estado').value,
+      observaciones: fila.querySelector('.input-obs').value,
+      responsable: fila.querySelector('.input-resp').value,
+      cantidad: cantidadInput ? cantidadInput.value : undefined
+    };
+    var tag = fila.querySelector('.item-autosave');
+    tag.textContent = 'Guardando...';
+    google.script.run
+      .withSuccessHandler(function () {
+        tag.textContent = '✓ Guardado';
+        actualizarProgreso();
+        setTimeout(function () { tag.textContent = ''; }, 2000);
+      })
+      .withFailureHandler(function (err) { tag.textContent = 'Error: ' + err.message; })
+      .guardarItemChecklistWeb(item);
+  }
+
+  ['nombreCopropiedad', 'nit', 'administradorSaliente', 'administradorEntrante',
+    'fechaDiagnostico', 'consultorResponsable', 'logoDriveFileId'].forEach(function (id) {
+    document.getElementById(id).addEventListener('input', function () { onCambioCabecera(); });
+    document.getElementById(id).addEventListener('change', function () { onCambioCabecera(); });
+  });
+
+  function onCambioCabecera() {
+    if (timersAutoguardado[TIMER_CABECERA]) clearTimeout(timersAutoguardado[TIMER_CABECERA]);
+    timersAutoguardado[TIMER_CABECERA] = setTimeout(guardarCabeceraAuto, DEBOUNCE_MS);
+  }
+
+  function guardarCabeceraAuto() {
+    var datos = leerCabeceraFormulario();
+    var tag = document.getElementById('autosaveCabecera');
+    tag.textContent = 'Guardando...';
+    google.script.run
+      .withSuccessHandler(function () {
+        tag.textContent = '✓ Guardado automáticamente';
+        document.getElementById('tituloEdificio').textContent =
+          'Diagnóstico de Empalme — ' + (datos.nombreCopropiedad || 'Nueva Copropiedad');
+        setTimeout(function () { tag.textContent = ''; }, 2500);
+      })
+      .withFailureHandler(function (err) { tag.textContent = 'Error: ' + err.message; })
+      .guardarCabeceraWeb(datos);
+  }
+
+  function leerCabeceraFormulario() {
+    return {
       nombreCopropiedad: document.getElementById('nombreCopropiedad').value,
       nit: document.getElementById('nit').value,
       administradorSaliente: document.getElementById('administradorSaliente').value,
@@ -103,34 +239,52 @@
       consultorResponsable: document.getElementById('consultorResponsable').value,
       logoDriveFileId: document.getElementById('logoDriveFileId').value
     };
-    setMsg('msgCabecera', 'Guardando...');
-    google.script.run
-      .withSuccessHandler(function () {
-        setMsg('msgCabecera', 'Guardado.');
-        document.getElementById('tituloEdificio').textContent =
-          'Diagnóstico de Empalme — ' + (datos.nombreCopropiedad || 'Nueva Copropiedad');
-      })
-      .withFailureHandler(function (err) { setMsg('msgCabecera', 'Error: ' + err.message); })
-      .guardarCabeceraWeb(datos);
-  });
+  }
+
+  // Botones manuales (siguen disponibles además del autoguardado).
+  document.getElementById('btnGuardarCabecera').addEventListener('click', guardarCabeceraAuto);
 
   document.getElementById('btnGuardarChecklist').addEventListener('click', function () {
     var filas = document.querySelectorAll('.item-row');
-    var items = [];
-    filas.forEach(function (fila) {
-      items.push({
-        filaSheet: Number(fila.dataset.filaSheet),
-        estado: fila.querySelector('.input-estado').value,
-        observaciones: fila.querySelector('.input-obs').value,
-        responsable: fila.querySelector('.input-resp').value
-      });
-    });
     setMsg('msgChecklist', 'Guardando...');
-    google.script.run
-      .withSuccessHandler(function () { setMsg('msgChecklist', 'Checklist guardado.'); })
-      .withFailureHandler(function (err) { setMsg('msgChecklist', 'Error: ' + err.message); })
-      .guardarChecklistWeb(items);
+    filas.forEach(function (fila) { guardarItem(fila); });
+    setMsg('msgChecklist', 'Checklist guardado.');
   });
+
+  // ---------- Progreso y "continuar donde iba" ----------
+
+  function actualizarProgreso() {
+    var filas = document.querySelectorAll('.item-row');
+    var total = filas.length;
+    var completados = 0;
+    filas.forEach(function (fila) {
+      if (fila.querySelector('.input-estado').value !== 'Pendiente') completados++;
+    });
+    document.getElementById('progresoTexto').textContent = 'Progreso: ' + completados + ' / ' + total + ' ítems diligenciados';
+  }
+
+  document.getElementById('btnContinuar').addEventListener('click', function () {
+    var filas = document.querySelectorAll('.item-row');
+    var objetivo = null;
+    filas.forEach(function (fila) {
+      if (!objetivo && fila.querySelector('.input-estado').value === 'Pendiente') objetivo = fila;
+    });
+    if (!objetivo) {
+      var cabecera = document.getElementById('nombreCopropiedad');
+      if (!cabecera.value) { cabecera.scrollIntoView({ behavior: 'smooth', block: 'center' }); cabecera.focus(); return; }
+      document.getElementById('resultado').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+    objetivo.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    objetivo.querySelector('.input-estado').focus();
+  });
+
+  // Actualiza el contador también cuando cualquier select de estado cambia manualmente.
+  document.getElementById('modulosContainer').addEventListener('change', function (ev) {
+    if (ev.target.classList.contains('input-estado')) actualizarProgreso();
+  });
+
+  // ---------- Resultados ----------
 
   document.getElementById('btnCalcular').addEventListener('click', function () {
     document.getElementById('resultado').textContent = 'Calculando...';

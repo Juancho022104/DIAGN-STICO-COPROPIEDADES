@@ -31,9 +31,14 @@ var RAVELL_CONFIG = {
     ESTADO: 4,
     OBSERVACIONES: 5,
     RESPONSABLE: 6,
-    FECHA_REVISION: 7
+    FECHA_REVISION: 7,
+    CANTIDAD: 8,
+    FOTOS: 9
   },
   CHECKLIST_FILA_INICIO: 3,
+
+  // Módulos donde tiene sentido capturar cantidad (p. ej. Inventario: "6 extintores").
+  MODULOS_CON_CANTIDAD: ['8. Inventario'],
 
   ESTADOS: ['Cumple', 'No Cumple', 'No Aplica', 'Pendiente'],
 
