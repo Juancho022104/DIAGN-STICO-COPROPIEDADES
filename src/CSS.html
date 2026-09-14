@@ -2,7 +2,7 @@
   :root {
     --color-primario: #1c3f60;
     --color-secundario: #c9a227;
-    --color-fondo: #f4f6f8;
+    --color-fondo: #eef3f8;
     --color-cumple: #d9ead3;
     --color-no-cumple: #f4cccc;
   }
@@ -14,6 +14,18 @@
     background: var(--color-fondo);
     margin: 0;
     color: #1a1a1a;
+    position: relative;
+  }
+
+  .marca-agua {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background-repeat: no-repeat;
+    background-position: center 45vh;
+    background-size: min(480px, 70vw);
+    opacity: 0.06;
+    pointer-events: none;
   }
 
   .hidden { display: none !important; }
@@ -53,11 +65,11 @@
   }
 
   .card {
-    background: #ffffff;
+    background: rgba(255, 255, 255, 0.94);
     border-radius: 8px;
     padding: 20px 24px;
     margin-bottom: 20px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 1px 4px rgba(28, 63, 96, 0.15);
   }
 
   .card h2 {
@@ -94,9 +106,10 @@
 
   .modulo {
     margin-bottom: 18px;
-    border: 1px solid #e3e3e3;
+    border: 1px solid #d7e2ec;
     border-radius: 6px;
     padding: 12px 14px;
+    background: #fbfcfe;
   }
 
   .modulo h3 {

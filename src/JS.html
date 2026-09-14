@@ -18,6 +18,8 @@
       var logo = document.getElementById('logoRavell');
       logo.src = data.logoDataUrl;
       logo.classList.remove('hidden');
+
+      document.getElementById('marcaAgua').style.backgroundImage = 'url(' + data.logoDataUrl + ')';
     }
 
     document.getElementById('nombreCopropiedad').value = data.cabecera.nombreCopropiedad;
