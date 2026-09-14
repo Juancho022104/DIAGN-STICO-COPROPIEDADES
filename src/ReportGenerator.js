@@ -169,7 +169,7 @@ function insertarHallazgosCriticos_(body, analisis) {
  */
 function insertarInventarioFotografico_(body) {
   var itemsInventario = getFilasChecklist_().filter(function (fila) {
-    return fila.modulo === '8. Inventario' && (fila.cantidad || (fila.fotos && fila.fotos.length > 0));
+    return fila.modulo === RAVELL_CONFIG.MODULOS_CON_CANTIDAD[0] && (fila.cantidad || (fila.fotos && fila.fotos.length > 0));
   });
 
   var h = body.appendParagraph('4. Anexo Fotográfico de Inventario');
