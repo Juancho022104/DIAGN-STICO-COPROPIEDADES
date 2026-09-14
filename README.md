@@ -9,7 +9,7 @@ Sheets se reutiliza para cualquier copropiedad (Edificio Calle 76, Edificio Terr
 
 ```
 src/
-  appsscript.json      Manifiesto del proyecto (script vinculado a Sheets)
+  appsscript.json      Manifiesto del proyecto (script vinculado a Sheets + Web App)
   Config.js             Único punto de configuración: celdas de cabecera,
                          catálogo de los 8 módulos e ítems, colores de marca
   Code.js                Menú personalizado (onOpen)
@@ -17,6 +17,10 @@ src/
   Utils.js                Helpers de lectura/escritura de la hoja
   AnalysisEngine.js       Motor de análisis: % de cumplimiento y hallazgos críticos
   ReportGenerator.js      Genera el Informe Ejecutivo en Google Docs con logo y membrete
+  WebApp.js               Backend de la Web App (doGet + funciones para el formulario)
+  Index.html              Formulario web (estructura)
+  CSS.html                Estilos del formulario web
+  JS.html                 Lógica del cliente del formulario web
 ```
 
 ### 1. Cabecera dinámica (hoja "Cabecera")
@@ -57,12 +61,48 @@ columna de **Observaciones** libre.
 (Cumple / (Cumple + No Cumple), excluyendo "No Aplica" y "Pendiente") y lo
 escribe en la hoja "Resumen".
 
-## Uso (menú "Ravell P.H. Diagnóstico" en Sheets)
+## Uso
+
+### Opción A — Formulario web (recomendado, automático)
+
+La operación diaria se hace desde la **Web App**, no editando la Sheet a mano:
+
+1. Abre la URL de la Web App (ver "Publicar la Web App" más abajo).
+2. Pestaña **Datos Generales**: diligencia Nombre de la Copropiedad, NIT,
+   administradores, fecha y consultor → **Guardar Datos Generales**.
+3. Sección **Checklist por Módulo**: se carga automáticamente con los 8
+   módulos e ítems; marca Estado, Observaciones y Responsable por ítem →
+   **Guardar Checklist**.
+4. **Calcular Cumplimiento** — muestra el % global y los hallazgos críticos.
+5. **Generar Informe Ejecutivo** — genera el Google Doc y muestra el enlace
+   para abrirlo directamente.
+
+Por detrás, el formulario sigue leyendo y escribiendo en las hojas Cabecera,
+Checklist y Resumen — así que el menú de Sheets (Opción B) y la Web App
+siempre están sincronizados sobre los mismos datos.
+
+### Opción B — Menú en Sheets (manual, alternativa)
 
 1. **Inicializar plantilla** — una sola vez por copropiedad nueva.
 2. Completar la hoja **Cabecera** y diligenciar el **Checklist**.
 3. **Calcular cumplimiento** — actualiza la hoja Resumen.
 4. **Generar Informe Ejecutivo** — produce el Google Doc final.
+
+### Publicar la Web App (paso manual, una vez por copropiedad)
+
+En el editor de Apps Script: **Implementar → Nueva implementación →
+Aplicación web**. Configura:
+- Ejecutar como: **Yo (tu cuenta)** — así la app puede escribir en la Sheet
+  aunque quien la use no tenga permisos directos sobre ella.
+- Quién tiene acceso: **Cualquier usuario con cuenta de Google** (requiere
+  login, adecuado porque el diagnóstico maneja datos financieros/legales
+  sensibles).
+
+Copia la URL de la Web App que te entrega — esa es la que compartes con tu
+equipo. Cada vez que el código cambie y se despliegue vía GitHub Actions,
+debes volver a **Implementar → Gestionar implementaciones → Editar → Nueva
+versión** para que la Web App tome el código actualizado (es el mismo paso
+manual que Google exige siempre, no se puede automatizar).
 
 ## Despliegue (clasp + GitHub Actions)
 

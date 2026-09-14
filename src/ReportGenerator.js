@@ -6,13 +6,23 @@
 
 function generarInformeEjecutivo() {
   var analisis = construirAnalisis_();
-  var cabecera = analisis.cabecera;
 
-  if (!cabecera.nombreCopropiedad) {
+  if (!analisis.cabecera.nombreCopropiedad) {
     SpreadsheetApp.getUi().alert('Completa primero el "Nombre de la Copropiedad" en la hoja Cabecera.');
     return;
   }
 
+  var url = generarInformeEjecutivoCore_(analisis);
+  SpreadsheetApp.getUi().alert('Informe Ejecutivo generado:\n' + url);
+  return url;
+}
+
+/**
+ * Construye el Google Doc a partir de un análisis ya calculado, sin depender de la UI de Sheets.
+ * La usan tanto el menú de Sheets como la Web App.
+ */
+function generarInformeEjecutivoCore_(analisis) {
+  var cabecera = analisis.cabecera;
   var nombreDoc = 'Informe Ejecutivo de Diagnóstico - ' + cabecera.nombreCopropiedad;
   var doc = DocumentApp.create(nombreDoc);
   var body = doc.getBody();
@@ -26,10 +36,8 @@ function generarInformeEjecutivo() {
   insertarCierre_(body, cabecera);
 
   doc.saveAndClose();
-
   moverInformeAlDriveDelProyecto_(doc.getId());
 
-  SpreadsheetApp.getUi().alert('Informe Ejecutivo generado:\n' + doc.getUrl());
   return doc.getUrl();
 }
 

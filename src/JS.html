@@ -1,0 +1,186 @@
+<script>
+  var ESTADOS = [];
+
+  document.addEventListener('DOMContentLoaded', function () {
+    google.script.run.withSuccessHandler(iniciar).withFailureHandler(mostrarErrorCarga).cargarDatosIniciales();
+  });
+
+  function iniciar(data) {
+    ESTADOS = data.estados;
+
+    document.getElementById('tituloEdificio').textContent =
+      'Diagnóstico de Empalme — ' + (data.cabecera.nombreCopropiedad || 'Nueva Copropiedad');
+
+    document.getElementById('nombreCopropiedad').value = data.cabecera.nombreCopropiedad;
+    document.getElementById('nit').value = data.cabecera.nit;
+    document.getElementById('administradorSaliente').value = data.cabecera.administradorSaliente;
+    document.getElementById('administradorEntrante').value = data.cabecera.administradorEntrante;
+    document.getElementById('fechaDiagnostico').value = data.cabecera.fechaDiagnostico;
+    document.getElementById('consultorResponsable').value = data.cabecera.consultorResponsable;
+    document.getElementById('logoDriveFileId').value = data.cabecera.logoDriveFileId;
+
+    renderModulos(data.modulos);
+
+    document.getElementById('loading').classList.add('hidden');
+    document.getElementById('app').classList.remove('hidden');
+  }
+
+  function renderModulos(modulos) {
+    var contenedor = document.getElementById('modulosContainer');
+    while (contenedor.firstChild) contenedor.removeChild(contenedor.firstChild);
+
+    modulos.forEach(function (modulo) {
+      var seccion = document.createElement('div');
+      seccion.className = 'modulo';
+
+      var titulo = document.createElement('h3');
+      titulo.textContent = modulo.nombre;
+      seccion.appendChild(titulo);
+
+      modulo.items.forEach(function (item) {
+        seccion.appendChild(crearFilaItem(item));
+      });
+
+      contenedor.appendChild(seccion);
+    });
+  }
+
+  function crearFilaItem(item) {
+    var fila = document.createElement('div');
+    fila.className = 'item-row';
+    fila.dataset.filaSheet = item.filaSheet;
+
+    var desc = document.createElement('p');
+    desc.className = 'item-desc';
+    desc.textContent = item.descripcion;
+    fila.appendChild(desc);
+
+    var controles = document.createElement('div');
+    controles.className = 'item-controles';
+
+    var select = document.createElement('select');
+    select.className = 'input-estado';
+    ESTADOS.forEach(function (estado) {
+      var opt = document.createElement('option');
+      opt.value = estado;
+      opt.textContent = estado;
+      if (estado === item.estado) opt.selected = true;
+      select.appendChild(opt);
+    });
+    controles.appendChild(select);
+
+    var obs = document.createElement('input');
+    obs.type = 'text';
+    obs.placeholder = 'Observaciones';
+    obs.className = 'input-obs';
+    obs.value = item.observaciones || '';
+    controles.appendChild(obs);
+
+    var resp = document.createElement('input');
+    resp.type = 'text';
+    resp.placeholder = 'Responsable';
+    resp.className = 'input-resp';
+    resp.value = item.responsable || '';
+    controles.appendChild(resp);
+
+    fila.appendChild(controles);
+    return fila;
+  }
+
+  document.getElementById('btnGuardarCabecera').addEventListener('click', function () {
+    var datos = {
+      nombreCopropiedad: document.getElementById('nombreCopropiedad').value,
+      nit: document.getElementById('nit').value,
+      administradorSaliente: document.getElementById('administradorSaliente').value,
+      administradorEntrante: document.getElementById('administradorEntrante').value,
+      fechaDiagnostico: document.getElementById('fechaDiagnostico').value,
+      consultorResponsable: document.getElementById('consultorResponsable').value,
+      logoDriveFileId: document.getElementById('logoDriveFileId').value
+    };
+    setMsg('msgCabecera', 'Guardando...');
+    google.script.run
+      .withSuccessHandler(function () {
+        setMsg('msgCabecera', 'Guardado.');
+        document.getElementById('tituloEdificio').textContent =
+          'Diagnóstico de Empalme — ' + (datos.nombreCopropiedad || 'Nueva Copropiedad');
+      })
+      .withFailureHandler(function (err) { setMsg('msgCabecera', 'Error: ' + err.message); })
+      .guardarCabeceraWeb(datos);
+  });
+
+  document.getElementById('btnGuardarChecklist').addEventListener('click', function () {
+    var filas = document.querySelectorAll('.item-row');
+    var items = [];
+    filas.forEach(function (fila) {
+      items.push({
+        filaSheet: Number(fila.dataset.filaSheet),
+        estado: fila.querySelector('.input-estado').value,
+        observaciones: fila.querySelector('.input-obs').value,
+        responsable: fila.querySelector('.input-resp').value
+      });
+    });
+    setMsg('msgChecklist', 'Guardando...');
+    google.script.run
+      .withSuccessHandler(function () { setMsg('msgChecklist', 'Checklist guardado.'); })
+      .withFailureHandler(function (err) { setMsg('msgChecklist', 'Error: ' + err.message); })
+      .guardarChecklistWeb(items);
+  });
+
+  document.getElementById('btnCalcular').addEventListener('click', function () {
+    document.getElementById('resultado').textContent = 'Calculando...';
+    google.script.run
+      .withSuccessHandler(mostrarResultadoCalculo)
+      .withFailureHandler(function (err) { document.getElementById('resultado').textContent = 'Error: ' + err.message; })
+      .calcularCumplimientoWeb();
+  });
+
+  document.getElementById('btnInforme').addEventListener('click', function () {
+    document.getElementById('resultado').textContent = 'Generando informe...';
+    google.script.run
+      .withSuccessHandler(mostrarResultadoInforme)
+      .withFailureHandler(function (err) { document.getElementById('resultado').textContent = 'Error: ' + err.message; })
+      .generarInformeWeb();
+  });
+
+  function mostrarResultadoCalculo(r) {
+    var contenedor = document.getElementById('resultado');
+    while (contenedor.firstChild) contenedor.removeChild(contenedor.firstChild);
+
+    var p1 = document.createElement('p');
+    var b = document.createElement('strong');
+    b.textContent = 'Cumplimiento global: ' + r.porcentajeGlobal + '%';
+    p1.appendChild(b);
+    contenedor.appendChild(p1);
+
+    var p2 = document.createElement('p');
+    p2.textContent = 'Hallazgos críticos: ' + r.hallazgosCriticos.length;
+    contenedor.appendChild(p2);
+  }
+
+  function mostrarResultadoInforme(res) {
+    var contenedor = document.getElementById('resultado');
+    while (contenedor.firstChild) contenedor.removeChild(contenedor.firstChild);
+
+    if (!res.ok) {
+      contenedor.textContent = res.message;
+      return;
+    }
+
+    var p = document.createElement('p');
+    p.textContent = 'Informe generado: ';
+    var a = document.createElement('a');
+    a.href = res.url;
+    a.target = '_blank';
+    a.textContent = 'Abrir Google Doc';
+    p.appendChild(a);
+    contenedor.appendChild(p);
+  }
+
+  function mostrarErrorCarga(err) {
+    document.getElementById('loading').textContent = 'Error cargando datos: ' + err.message;
+  }
+
+  function setMsg(id, texto) {
+    document.getElementById(id).textContent = texto;
+  }
+</script>

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <?!= include('CSS'); ?>
+</head>
+<body>
+  <header class="topbar">
+    <h1 id="tituloEdificio">Diagnóstico de Empalme — Ravell P.H.</h1>
+  </header>
+
+  <div id="loading" class="loading">Cargando datos...</div>
+
+  <main id="app" class="hidden">
+    <section class="card">
+      <h2>Datos Generales</h2>
+      <div class="grid">
+        <label>Nombre de la Copropiedad
+          <input type="text" id="nombreCopropiedad">
+        </label>
+        <label>NIT
+          <input type="text" id="nit">
+        </label>
+        <label>Administrador Saliente
+          <input type="text" id="administradorSaliente">
+        </label>
+        <label>Administrador Entrante
+          <input type="text" id="administradorEntrante">
+        </label>
+        <label>Fecha de Diagnóstico
+          <input type="date" id="fechaDiagnostico">
+        </label>
+        <label>Consultor Responsable
+          <input type="text" id="consultorResponsable">
+        </label>
+        <label>ID de logo en Drive (opcional)
+          <input type="text" id="logoDriveFileId">
+        </label>
+      </div>
+      <button id="btnGuardarCabecera" class="btn btn-primary">Guardar Datos Generales</button>
+      <span id="msgCabecera" class="msg"></span>
+    </section>
+
+    <section class="card">
+      <h2>Checklist por Módulo</h2>
+      <div id="modulosContainer"></div>
+      <button id="btnGuardarChecklist" class="btn btn-primary">Guardar Checklist</button>
+      <span id="msgChecklist" class="msg"></span>
+    </section>
+
+    <section class="card">
+      <h2>Resultados</h2>
+      <button id="btnCalcular" class="btn btn-secondary">Calcular Cumplimiento</button>
+      <button id="btnInforme" class="btn btn-accent">Generar Informe Ejecutivo</button>
+      <div id="resultado"></div>
+    </section>
+  </main>
+
+  <?!= include('JS'); ?>
+</body>
+</html>
