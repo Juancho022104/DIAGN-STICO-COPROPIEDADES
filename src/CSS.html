@@ -21,11 +21,15 @@
     position: fixed;
     inset: 0;
     z-index: -1;
-    background-repeat: no-repeat;
-    background-position: center 45vh;
-    background-size: min(480px, 70vw);
-    opacity: 0.06;
+    background-repeat: no-repeat, no-repeat;
+    background-position: -110px 50%, calc(100% + 110px) 50%;
+    background-size: 420px auto, 420px auto;
+    opacity: 0.14;
     pointer-events: none;
+  }
+
+  @media (max-width: 1150px) {
+    .marca-agua { display: none; }
   }
 
   .hidden { display: none !important; }
